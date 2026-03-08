@@ -2,11 +2,15 @@
 
 using BepInEx;
 using BepInEx.Configuration;
+using CraftKill;
 using HarmonyLib;
 using Mod.Helpers;
 using Mod.Helpers.Attributes;
+using TMPro;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 [BepInPlugin(PluginInfo.GUID, PluginInfo.Name, PluginInfo.Version)]
 public class Plugin : BaseUnityPlugin
@@ -22,6 +26,27 @@ public class Plugin : BaseUnityPlugin
         config = Config;
 
         new Harmony(PluginInfo.GUID).PatchAll();
+
+        SceneManager.sceneLoaded += (_, __) => Invoke(nameof(OnSceneLoad), 0.1f);
+    }
+
+    public void OnSceneLoad()
+    {
+        if (SceneHelper.CurrentScene == "Main Menu")
+        {
+            foreach (var button in FindObjectsOfType<Button>(true))
+            {
+                if (button.name == "Sandbox")
+                {
+                    GameObject copy = Instantiate(button.gameObject, button.transform.parent);
+                    copy.GetComponentInChildren<TMP_Text>(true).text = "WORLD";
+                    var b = copy.GetComponent<Button>();
+                    b.onClick = new();
+                    b.onClick.AddListener(() => Minefart.LoadLevel());
+                    return;
+                }
+            }
+        }
     }
 
     public void Start()

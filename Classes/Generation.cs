@@ -18,7 +18,7 @@ public class Generation : MonoBehaviour
 
     public static int GetValue(int x, int z, int seed)
     {
-        float scale = 0.08f;
+        float scale = 0.04f;
 
         float nx = (x + seed) * scale;
         float nz = (z + seed) * scale;
@@ -38,31 +38,27 @@ public class Generation : MonoBehaviour
         GameObject c = new GameObject("Chunk");
         chunks[new Vector2Int(chunkX, chunkZ)] = c;
 
+        float blockSize = CubePlacer.instance.blockSize;
+
         for (int x = 0; x < chunkSize; x++)
         {
             for (int z = 0; z < chunkSize; z++)
             {
-                float blockSize = CubePlacer.instance.blockSize;
                 int worldX = chunkX * chunkSize + x;
                 int worldZ = chunkZ * chunkSize + z;
                 int value = GetValue(worldX, worldZ, seed);
-                while (value > -5)
-                {
-                    CubePlacer.instance.PlaceCube((new Vector3(
-                        worldX * blockSize,
-                        value * blockSize - 100,
-                        worldZ * blockSize) + Vector3.one * blockSize / 2f),
-                        CubePlacer.instance.blocks[0],
-                        c.transform,
-                        true
-                    );
-
-                    value -= 1;
-                }
+                CubePlacer.instance.PlaceCube((new Vector3(
+                    worldX * blockSize,
+                    value * blockSize - 100,
+                    worldZ * blockSize) + Vector3.one * blockSize / 2f),
+                    CubePlacer.instance.blocks[5],
+                    c.transform,
+                    true
+                );
             }
-        }
 
-        yield return null;
+            if (x % 2 == 0) yield return null;
+        }
     }
 
     public void Start()

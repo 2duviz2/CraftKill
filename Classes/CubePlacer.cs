@@ -17,7 +17,6 @@ public class CubePlacer : MonoBehaviour
     public static CubePlacer instance;
 
     public Camera cam;
-    public BlockOptimizer blockOptimizer;
 
     public List<Block> blocks = [];
     public List<(Block, int)> inventory = [];
@@ -31,7 +30,7 @@ public class CubePlacer : MonoBehaviour
     public Transform ItemsContainer;
 
     public Material defaultMaterial;
-
+    
     public Dictionary<string, GameObject> assets = [];
 
     LayerMask layerMask = LayerMask.GetMask("Outdoors", "OutdoorsBaked", "Environment", "EnvironmentBaked");
@@ -58,8 +57,7 @@ public class CubePlacer : MonoBehaviour
         SetupItemsCanvas();
         SetupDefaultBlocks();
 
-        blockOptimizer = gameObject.AddComponent<BlockOptimizer>();
-        gameObject.AddComponent<Generation>();
+        if (SceneHelper.CurrentScene == Minefart.MinefartSceneName) gameObject.AddComponent<Generation>();
     }
 
     void SetupAssets()
@@ -82,6 +80,8 @@ public class CubePlacer : MonoBehaviour
         NewBlock("cat", BundleLoader.bundle.LoadAsset<Texture>("cat"), BlockType.block);
         NewBlock("cat2", BundleLoader.bundle.LoadAsset<Texture>("cat2"), BlockType.block);
         NewBlock("Mrbones", BundleLoader.bundle.LoadAsset<Texture>("Mrbones"), BlockType.block);
+        NewBlock("StrongRock", BundleLoader.bundle.LoadAsset<Texture>("BackgroundTile"), BlockType.bedrock);
+        NewBlock("Lava", Plugin.Ass<Material>("Assets/Materials/Liquids/Lava.mat").mainTexture, BlockType.lava);
     }
 
     void ReloadInventory()
@@ -189,9 +189,8 @@ public class CubePlacer : MonoBehaviour
                 }
                 if (InputManager.Instance.InputSource.Fire1.WasPerformedThisFrame)
                 {
-                    if (hitTransform.name == "CraftKill_Breakable")
+                    if (hitTransform.name == "CraftKill_Breakable" && hitTransform.GetComponent<BlockInfo>().block.type != BlockType.bedrock)
                     {
-                        blockOptimizer.isDirty = true;
                         CreateParticle(hitTransform.position, hitTransform.GetComponent<BlockInfo>().block);
                         CreatePickup(hitTransform.position, hitTransform.GetComponent<BlockInfo>().block);
                         Destroy(hitTransform.gameObject);
@@ -242,7 +241,6 @@ public class CubePlacer : MonoBehaviour
         cube.GetComponent<BoxCollider>().size = Vector3.one * 1.05f;
         if (!optimized) cube.AddComponent<PortalAwareRenderer>();
 
-
         cube.GetComponent<Renderer>().material = GetMaterial(block);
         cube.AddComponent<BlockInfo>().block = block;
 
@@ -274,16 +272,18 @@ public class CubePlacer : MonoBehaviour
                 explosion.speed = 3;
             });
         }
+        else if (block.type == BlockType.bedrock)
+        {
+            Destroy(breakable);
+            // do nothing :P
+        }
         else
         {
             breakable.destroyEvent.onActivate.AddListener(() =>
             {
                 CreateParticle(pos, block);
-                blockOptimizer.isDirty = true;
             });
         }
-
-        blockOptimizer.AddBlock(cube.transform);
     }
 
     public void CreatePickup(Vector3 pos, Block block)

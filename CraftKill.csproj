@@ -22,12 +22,9 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
-	  <None Remove="Assets\assets.bunde" />
-	</ItemGroup>
-	
-	<ItemGroup>
 	  <EmbeddedResource Include="Assets\assets.bunde" LogicalName="assets.bundle" />
-	</ItemGroup>
+      <EmbeddedResource Include="Assets\scene.bundle" LogicalName="scene.bundle" />
+    </ItemGroup>
 
 	<ItemGroup>
 		<!-- Nuget Packages -->

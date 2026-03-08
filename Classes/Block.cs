@@ -6,6 +6,8 @@ public enum BlockType
 {
     block,
     tnt,
+    bedrock,
+    lava,
 }
 
 public class Block : ScriptableObject
