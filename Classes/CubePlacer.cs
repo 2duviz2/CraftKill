@@ -95,6 +95,8 @@ public class CubePlacer : MonoBehaviour
         NewBlock("StrongRock", BundleLoader.bundle.LoadAsset<Texture>("BackgroundTile"), BlockType.bedrock, 0);
         NewBlock("Lava", Plugin.Ass<Material>("Assets/Materials/Liquids/Lava.mat").mainTexture, BlockType.lava, 0);
         NewBlock("Grass", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 1/Grass.mat").mainTexture, BlockType.bedrock, 0);
+        NewBlock("CaveRock", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 5/CaveRock1.mat").mainTexture, BlockType.block, 5);
+        NewBlock("BoneWall", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 6/BoneWall.mat").mainTexture, BlockType.block, 2);
     }
 
     void ReloadInventory()

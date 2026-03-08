@@ -1,5 +1,6 @@
 ﻿namespace CraftKill.Classes;
 
+using HarmonyLib;
 using Mod;
 using System.Collections;
 using System.Collections.Generic;
@@ -70,7 +71,7 @@ public class Generation : MonoBehaviour
         }
     }
 
-    public void CheckForNewMob(int worldX, int value, int worldZ, Transform c)
+    public static void CheckForNewMob(int worldX, int value, int worldZ, Transform c)
     {
         if (Random.value <= mobChance)
         {
@@ -78,7 +79,7 @@ public class Generation : MonoBehaviour
         }
     }
 
-    public void CheckForNewCrate(int worldX, int value, int worldZ, Transform c)
+    public static void CheckForNewCrate(int worldX, int value, int worldZ, Transform c)
     {
         if (Random.value <= crateChance)
         {
@@ -86,7 +87,7 @@ public class Generation : MonoBehaviour
         }
     }
 
-    public List<string> enemies = [
+    public static List<string> enemies = [
         "Assets/Prefabs/Enemies/Rewrite/Zombie/Filth.prefab",
         "Assets/Prefabs/Enemies/Rewrite/Zombie/Soldier.prefab",
         "Assets/Prefabs/Enemies/Rewrite/Zombie/Stray.prefab",
@@ -108,7 +109,7 @@ public class Generation : MonoBehaviour
         "Assets/Prefabs/Enemies/Schism.prefab",
         ];
 
-    public void NewMob(Vector3 pos, Transform c)
+    public static void NewMob(Vector3 pos, Transform c)
     {
         if (!NewMovement.Instance.activated) return;
 
@@ -117,7 +118,7 @@ public class Generation : MonoBehaviour
         Enemy.transform.SetParent(c);
     }
 
-    public void NewCube(Vector3 cubePos, int block, GameObject c)
+    public static void NewCube(Vector3 cubePos, int block, GameObject c)
     {
         CubePlacer.instance.PlaceCube(
             cubePos,
@@ -127,7 +128,7 @@ public class Generation : MonoBehaviour
         );
     }
 
-    public void NewCrate(Vector3 pos, Transform c)
+    public static void NewCrate(Vector3 pos, Transform c, int min = 30, int max = 50)
     {
         GameObject crate = Instantiate(Plugin.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Crate.prefab"), pos, Quaternion.identity);
         crate.transform.localScale = Vector3.one * (CubePlacer.instance.blockSize / 2f);
@@ -136,13 +137,13 @@ public class Generation : MonoBehaviour
         crate.transform.position += Vector3.down * (CubePlacer.instance.blockSize / 2f);
         crate.GetComponent<Breakable>().destroyEvent.onActivate.AddListener(() =>
         {
-            SpawnThingies(pos);
+            SpawnThingies(pos, min, max);
         });
         crate.GetComponent<Breakable>().crate = false;
         if (c) crate.transform.SetParent(c);
     }
 
-    public void SpawnThingies(Vector3 pos)
+    public static void SpawnThingies(Vector3 pos, int min, int max)
     {
         List<Block> blocks = [];
 
@@ -154,7 +155,7 @@ public class Generation : MonoBehaviour
                 blocks.Add(b);
         }
 
-        for (int i = 0; i < Random.Range(1, 50); i++)
+        for (int i = 0; i < Random.Range(min, max); i++)
         {
             if (blocks.Count == 0) break;
 
@@ -162,7 +163,7 @@ public class Generation : MonoBehaviour
         }
     }
 
-    public Vector3 GetPos(Vector3 pos, float blockSize)
+    public static Vector3 GetPos(Vector3 pos, float blockSize)
     {
         return new Vector3(
             pos.x * blockSize,
@@ -210,8 +211,22 @@ public class Generation : MonoBehaviour
     {
         Plugin.LogInfo("Generating...");
         this.seed = seed;
-        mobChance *= MonoSingleton<PrefsManager>.Instance.GetInt("difficulty");
+        mobChance = 0.04f / 256f;
+        mobChance *= PrefsManager.Instance.GetInt("difficulty");
         GenerateChunk(0, 0, seed);
-        NewCrate(new Vector3(-5, 3, 5), null);
+        NewCrate(new Vector3(-5, 3, 5), null, 8, 9);
+    }
+}
+
+[HarmonyPatch]
+public class EnemyDeathRewardPatch
+{
+    [HarmonyPatch(typeof(EnemyIdentifier), nameof(EnemyIdentifier.ProcessDeath))]
+    public static void Prefix(EnemyIdentifier __instance)
+    {
+        if (SceneHelper.CurrentScene != Minefart.MinefartSceneName) return;
+        int rank = EnemyTracker.Instance.GetEnemyRank(__instance);
+        if (rank <= 0) return;
+        Generation.SpawnThingies(__instance.transform.position, rank * 2, rank * 3);
     }
 }
