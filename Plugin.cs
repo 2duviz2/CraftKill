@@ -3,6 +3,7 @@
 using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
+using Mod.Helpers;
 using Mod.Helpers.Attributes;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -25,6 +26,8 @@ public class Plugin : BaseUnityPlugin
 
     public void Start()
     {
+        BundleLoader.LoadBundle("assets.bundle");
+
         foreach (var (type, attr) in AttributeHelper.GetTypesWithAttribute<CreateOnStart>())
         {
             if (typeof(MonoBehaviour).IsAssignableFrom(type))
@@ -44,7 +47,7 @@ public class Plugin : BaseUnityPlugin
 
 public class PluginInfo
 {
-    public const string GUID = "AuthorName.ModName";
-    public const string Name = "ModName";
+    public const string GUID = "duviz.craftkill";
+    public const string Name = "CraftKill";
     public const string Version = "1.0.0";
 }

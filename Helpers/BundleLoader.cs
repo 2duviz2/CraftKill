@@ -1,4 +1,4 @@
-namespace Mod.Helpers;
+﻿namespace Mod.Helpers;
 
 using UnityEngine;
 using System.IO;
@@ -14,16 +14,13 @@ public static class BundleLoader
     {
         var assembly = Assembly.GetExecutingAssembly();
 
-        string resourcePath = $"{PluginInfo.Name}.{path}";
+        string resourcePath = $"{path}";
 
         using var stream = assembly.GetManifestResourceStream(resourcePath);
         if (stream == null) { Plugin.LogError($"Bundle not found: {resourcePath}"); return; }
 
-        using var ms = new MemoryStream();
-        stream.CopyTo(ms);
-
         UnloadBundle();
-        bundle = AssetBundle.LoadFromMemory(ms.ToArray());
+        bundle = AssetBundle.LoadFromStream(stream);
     }
 
     /// <summary> Unloads current bundle, called whenever a new bundle loads </summary>

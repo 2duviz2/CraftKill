@@ -2,7 +2,7 @@
 	<Import Project="Paths.props" />
 	
 	<PropertyGroup>
-		<AssemblyName>Mod</AssemblyName>
+		<AssemblyName>CraftKill</AssemblyName>
 		<Description>Description</Description>
 		<Version>1.0.0</Version>
 
@@ -20,6 +20,14 @@
 			https://nuget.samboy.dev/v3/index.json
 		</RestoreAdditionalProjectSources>
 	</PropertyGroup>
+	
+	<ItemGroup>
+	  <None Remove="Assets\assets.bunde" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <EmbeddedResource Include="Assets\assets.bunde" LogicalName="assets.bundle" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<!-- Nuget Packages -->
