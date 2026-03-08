@@ -24,6 +24,7 @@ public static class Minefart
         // istg why does this crash the game when u dont do this
         Plugin.Ass<GameObject>("FirstRoom");
         Plugin.Ass<GameObject>("FirstRoom Pit");
+        Plugin.Ass<GameObject>("Wrapped Shop");
 
         // load asset bundle :3 meow rawr
         Stream bundleStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("scene.bundle");

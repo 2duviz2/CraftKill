@@ -12,6 +12,10 @@ public class Generation : MonoBehaviour
     public static int chunkSize = 16;
     public static int loadDistance = 4;
 
+    public static int minMobHeight = 3;
+    public static float mobChance = 0.04f / 256f;
+    public static float crateChance = 0.05f / 256f;
+
     public Dictionary<Vector2Int, GameObject> chunks = [];
 
     public int seed = 0;
@@ -36,6 +40,7 @@ public class Generation : MonoBehaviour
     public IEnumerator GenerateChunkIE(int chunkX, int chunkZ, int seed)
     {
         GameObject c = new GameObject("Chunk");
+        c.AddComponent<GoreZone>();
         chunks[new Vector2Int(chunkX, chunkZ)] = c;
 
         float blockSize = CubePlacer.instance.blockSize;
@@ -47,23 +52,127 @@ public class Generation : MonoBehaviour
                 int worldX = chunkX * chunkSize + x;
                 int worldZ = chunkZ * chunkSize + z;
                 int value = GetValue(worldX, worldZ, seed);
-                CubePlacer.instance.PlaceCube((new Vector3(
-                    worldX * blockSize,
-                    value * blockSize - 100,
-                    worldZ * blockSize) + Vector3.one * blockSize / 2f),
-                    CubePlacer.instance.blocks[5],
-                    c.transform,
-                    true
-                );
+
+                var cubePos = GetPos(new Vector3(worldX, value, worldZ), blockSize);
+
+                NewCube(cubePos, 7, c);
+                CheckForNewMob(worldX, value, worldZ, c.transform);
+                CheckForNewCrate(worldX, value, worldZ, c.transform);
+
+                if (value == 1)
+                {
+                    cubePos = GetPos(new Vector3(worldX, value + 1, worldZ), blockSize);
+                    NewCube(cubePos, 6, c);
+                }
             }
 
             if (x % 2 == 0) yield return null;
         }
     }
 
+    public void CheckForNewMob(int worldX, int value, int worldZ, Transform c)
+    {
+        if (Random.value <= mobChance)
+        {
+            NewMob(GetPos(new Vector3(worldX, value + 1, worldZ), CubePlacer.instance.blockSize), c);
+        }
+    }
+
+    public void CheckForNewCrate(int worldX, int value, int worldZ, Transform c)
+    {
+        if (Random.value <= crateChance)
+        {
+            NewCrate(GetPos(new Vector3(worldX, value + 1, worldZ), CubePlacer.instance.blockSize), c);
+        }
+    }
+
+    public List<string> enemies = [
+        "Assets/Prefabs/Enemies/Rewrite/Zombie/Filth.prefab",
+        "Assets/Prefabs/Enemies/Rewrite/Zombie/Soldier.prefab",
+        "Assets/Prefabs/Enemies/Rewrite/Zombie/Stray.prefab",
+        "Assets/Prefabs/Enemies/Schism.prefab",
+        "Assets/Prefabs/Enemies/Rewrite/Statue/Cerberus.prefab",
+        "Assets/Prefabs/Enemies/Rewrite/Machine/Swordsmachine.prefab",
+        //"Assets/Prefabs/Enemies/Deathcatcher.prefab",
+        "Assets/Prefabs/Enemies/Idol.prefab",
+        "Assets/Prefabs/Enemies/Malicious Face.prefab",
+        "Assets/Prefabs/Enemies/Mass.prefab",
+        "Assets/Prefabs/Enemies/Mannequin.prefab",
+        "Assets/Prefabs/Enemies/Guttertank.prefab",
+        "Assets/Prefabs/Enemies/Gutterman.prefab",
+        "Assets/Prefabs/Enemies/Providence.prefab",
+        "Assets/Prefabs/Enemies/PowerWithSpawnEffect.prefab",
+        "Assets/Prefabs/Enemies/Drone.prefab",
+        "Assets/Prefabs/Enemies/Virtue.prefab",
+        "Assets/Prefabs/Enemies/Streetcleaner.prefab",
+        "Assets/Prefabs/Enemies/Schism.prefab",
+        ];
+
+    public void NewMob(Vector3 pos, Transform c)
+    {
+        if (!NewMovement.Instance.activated) return;
+
+        GameObject Enemy = Instantiate(Plugin.Ass<GameObject>(enemies[Random.Range(0, enemies.Count)]), pos - Vector3.up * (CubePlacer.instance.blockSize / 2f), Quaternion.identity);
+        if (Enemy.name.StartsWith("Providence")) Enemy.transform.Translate(0, 5, 0);
+        Enemy.transform.SetParent(c);
+    }
+
+    public void NewCube(Vector3 cubePos, int block, GameObject c)
+    {
+        CubePlacer.instance.PlaceCube(
+            cubePos,
+            CubePlacer.instance.blocks[block],
+            c.transform,
+            true
+        );
+    }
+
+    public void NewCrate(Vector3 pos, Transform c)
+    {
+        GameObject crate = Instantiate(Plugin.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Crate.prefab"), pos, Quaternion.identity);
+        crate.transform.localScale = Vector3.one * (CubePlacer.instance.blockSize / 2f);
+        crate.transform.position -= Vector3.right * (CubePlacer.instance.blockSize / 2f);
+        crate.transform.position += Vector3.forward * (CubePlacer.instance.blockSize / 2f);
+        crate.transform.position += Vector3.down * (CubePlacer.instance.blockSize / 2f);
+        crate.GetComponent<Breakable>().destroyEvent.onActivate.AddListener(() =>
+        {
+            SpawnThingies(pos);
+        });
+        crate.GetComponent<Breakable>().crate = false;
+        if (c) crate.transform.SetParent(c);
+    }
+
+    public void SpawnThingies(Vector3 pos)
+    {
+        List<Block> blocks = [];
+
+        foreach (var b in CubePlacer.instance.blocks)
+        {
+            if (b.chance == 0) continue;
+
+            for (int i = 0; i < b.chance; i++)
+                blocks.Add(b);
+        }
+
+        for (int i = 0; i < Random.Range(1, 50); i++)
+        {
+            if (blocks.Count == 0) break;
+
+            CubePlacer.instance.CreatePickup(pos + new Vector3(Random.value - 0.5f, Random.value - 0.5f, Random.value - 0.5f) * (CubePlacer.instance.blockSize / 2f), blocks[Random.Range(0, blocks.Count)]);
+        }
+    }
+
+    public Vector3 GetPos(Vector3 pos, float blockSize)
+    {
+        return new Vector3(
+            pos.x * blockSize,
+            pos.y * blockSize - 100,
+            pos.z * blockSize) + Vector3.one * blockSize / 2f;
+    }
+
     public void Start()
     {
-        Generate(Random.Range(0, 1000));
+        Generate(Random.Range(0, 100000));
     }
 
     public void Update()
@@ -101,6 +210,8 @@ public class Generation : MonoBehaviour
     {
         Plugin.LogInfo("Generating...");
         this.seed = seed;
+        mobChance *= MonoSingleton<PrefsManager>.Instance.GetInt("difficulty");
         GenerateChunk(0, 0, seed);
+        NewCrate(new Vector3(-5, 3, 5), null);
     }
 }

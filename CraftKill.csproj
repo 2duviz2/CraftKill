@@ -67,6 +67,12 @@
 		<Reference Include="Unity.ResourceManager OwO">
 			<HintPath>$(ManagedPath)\Unity.ResourceManager.dll</HintPath>
 		</Reference>
+		<Reference Include="Unity.AI.Navigation">
+			<HintPath>$(ManagedPath)\Unity.AI.Navigation.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.AIModule">
+			<HintPath>$(ManagedPath)\UnityEngine.AIModule.dll</HintPath>
+		</Reference>
 
       <Publicize Include="Assembly-CSharp" />
 	</ItemGroup>

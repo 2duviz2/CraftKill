@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using ULTRAKILL.Portal;
+using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
@@ -37,10 +38,15 @@ public class CubePlacer : MonoBehaviour
 
     public float blockSize = 5;
     public float reach = 25f;
-    public bool inventoryDirty = false;
+    public bool inventoryDirty = true;
+
+    public float timeWithoutNavmeshUpdate = 100;
+    public float navmeshSyncRate = 2.5f;
 
     public KeyCode toggleKeycode = KeyCode.X;
     public KeyCode changeBlockKeycode = KeyCode.LeftAlt;
+
+    public NavMeshSurface surface;
 
     public void Start()
     {
@@ -57,7 +63,13 @@ public class CubePlacer : MonoBehaviour
         SetupItemsCanvas();
         SetupDefaultBlocks();
 
-        if (SceneHelper.CurrentScene == Minefart.MinefartSceneName) gameObject.AddComponent<Generation>();
+        if (SceneHelper.CurrentScene == Minefart.MinefartSceneName)
+        {
+            gameObject.AddComponent<Generation>();
+            surface = FindObjectOfType<NavMeshSurface>();
+            surface.layerMask = LayerMask.GetMask("Outdoors");
+            surface.size = Vector3.one * Generation.chunkSize * blockSize * 2;
+        }
     }
 
     void SetupAssets()
@@ -75,13 +87,14 @@ public class CubePlacer : MonoBehaviour
 
     void SetupDefaultBlocks()
     {
-        NewBlock("Default", defaultMaterial.mainTexture, BlockType.block);
-        NewBlock("BlowMe", BundleLoader.bundle.LoadAsset<Texture>("blowme"), BlockType.tnt);
-        NewBlock("cat", BundleLoader.bundle.LoadAsset<Texture>("cat"), BlockType.block);
-        NewBlock("cat2", BundleLoader.bundle.LoadAsset<Texture>("cat2"), BlockType.block);
-        NewBlock("Mrbones", BundleLoader.bundle.LoadAsset<Texture>("Mrbones"), BlockType.block);
-        NewBlock("StrongRock", BundleLoader.bundle.LoadAsset<Texture>("BackgroundTile"), BlockType.bedrock);
-        NewBlock("Lava", Plugin.Ass<Material>("Assets/Materials/Liquids/Lava.mat").mainTexture, BlockType.lava);
+        NewBlock("Default", defaultMaterial.mainTexture, BlockType.block, 5);
+        NewBlock("BlowMe", BundleLoader.bundle.LoadAsset<Texture>("blowme"), BlockType.tnt, 1);
+        NewBlock("cat", BundleLoader.bundle.LoadAsset<Texture>("cat"), BlockType.block, 0);
+        NewBlock("cat2", BundleLoader.bundle.LoadAsset<Texture>("cat2"), BlockType.block, 0);
+        NewBlock("Mrbones", BundleLoader.bundle.LoadAsset<Texture>("Mrbones"), BlockType.block, 0);
+        NewBlock("StrongRock", BundleLoader.bundle.LoadAsset<Texture>("BackgroundTile"), BlockType.bedrock, 0);
+        NewBlock("Lava", Plugin.Ass<Material>("Assets/Materials/Liquids/Lava.mat").mainTexture, BlockType.lava, 0);
+        NewBlock("Grass", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 1/Grass.mat").mainTexture, BlockType.bedrock, 0);
     }
 
     void ReloadInventory()
@@ -109,12 +122,10 @@ public class CubePlacer : MonoBehaviour
         }
     }
 
-    void NewBlock(string blockID, Texture texture, BlockType type = BlockType.block)
+    void NewBlock(string blockID, Texture texture, BlockType type, int chance)
     {
-        var block = new Block(blockID, texture, type);
+        var block = new Block(blockID, texture, type, chance);
         blocks.Add(block);
-
-        GiveBlock(block, 1000);
     }
 
     public void ClearBlock(Block block, int amount)
@@ -218,6 +229,14 @@ public class CubePlacer : MonoBehaviour
             inventoryDirty = false;
             ReloadInventory();
         }
+
+        timeWithoutNavmeshUpdate += Time.deltaTime;
+        if (timeWithoutNavmeshUpdate >= navmeshSyncRate && surface)
+        {
+            timeWithoutNavmeshUpdate = 0;
+            surface.transform.position = NewMovement.Instance.transform.position;
+            surface.BuildNavMesh();
+        }
     }
 
     public void PlaceCubeByPlayer(Vector3 pos)
@@ -276,6 +295,36 @@ public class CubePlacer : MonoBehaviour
         {
             Destroy(breakable);
             // do nothing :P
+        }
+        else if (block.type == BlockType.lava)
+        {
+            Destroy(breakable);
+
+            Destroy(cube.GetComponent<BoxCollider>());
+
+            GameObject newCube = new GameObject("Water");
+            newCube.transform.SetParent(cube.transform, false);
+            newCube.transform.localScale = Vector3.one;
+
+            newCube.AddComponent<BoxCollider>().isTrigger = true;
+
+            newCube.AddComponent<Water>().clr = new Color(1, 0.3387192f, 0);
+
+            var hz = newCube.AddComponent<HurtZone>();
+
+            hz.damageType = EnviroDamageType.Burn;
+            hz.trigger = true;
+            hz.affected = AffectedSubjects.All;
+            hz.ignoreDashingPlayer = false;
+            hz.ignoreInvincibility = false;
+            hz.bounceForce = 25f;
+            hz.hurtCooldown = 1f;
+            hz.setDamage = 50f;
+            hz.hardDamagePercentage = 0.35f;
+
+            newCube.layer = LayerMask.NameToLayer("Water");
+
+            var st = cube.AddComponent<ScrollMe>();
         }
         else
         {
@@ -361,6 +410,9 @@ public class CubePlacer : MonoBehaviour
 
         return mat;
     }
+
+    Material GetPathMaterial(string path) =>
+        new(Plugin.Ass<Material>($"Assets/Materials/{path}.mat"));
 }
 
 [HarmonyPatch]
