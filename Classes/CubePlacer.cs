@@ -11,6 +11,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
 using UnityEngine.UIElements;
+using static ULTRAKILL.Portal.PortalRenderV2;
 
 public class CubePlacer : MonoBehaviour
 {
@@ -191,7 +192,7 @@ public class CubePlacer : MonoBehaviour
                 {
                     if (hitTransform.name == "CraftKill_Breakable")
                     {
-                        blockOptimizer.isDirty = true;
+                        blockOptimizer.DestroyBlock(hitTransform.position);
                         CreateParticle(hitTransform.position, hitTransform.GetComponent<BlockInfo>().block);
                         CreatePickup(hitTransform.position, hitTransform.GetComponent<BlockInfo>().block);
                         Destroy(hitTransform.gameObject);
@@ -229,6 +230,11 @@ public class CubePlacer : MonoBehaviour
 
     public void PlaceCube(Vector3 pos, Block block, Transform forceParent = null, bool optimized = false)
     {
+        blockOptimizer.AddBlock(pos, block, forceParent, optimized);
+    }
+
+    public GameObject SpawnCube(Vector3 pos, Block block, Transform forceParent, bool optimized, bool px, bool nx, bool py, bool ny, bool pz, bool nz)
+    {
         GameObject cube = Instantiate(placedCube, pos, Quaternion.identity);
 
         if (forceParent)
@@ -242,8 +248,57 @@ public class CubePlacer : MonoBehaviour
         cube.GetComponent<BoxCollider>().size = Vector3.one * 1.05f;
         if (!optimized) cube.AddComponent<PortalAwareRenderer>();
 
+        var r = cube.GetComponent<Renderer>();
+        r.material = GetMaterial(block);
 
-        cube.GetComponent<Renderer>().material = GetMaterial(block);
+        var mf = cube.GetComponent<MeshFilter>();
+        var mesh = new Mesh();
+
+        List<Vector3> verts = [];
+        List<int> tris = [];
+        List<Vector2> uvs = [];
+
+        void AddFace(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 v3)
+        {
+            int start = verts.Count;
+
+            verts.Add(v0);
+            verts.Add(v1);
+            verts.Add(v2);
+            verts.Add(v3);
+
+            tris.Add(start + 0);
+            tris.Add(start + 2);
+            tris.Add(start + 1);
+
+            tris.Add(start + 0);
+            tris.Add(start + 3);
+            tris.Add(start + 2);
+
+            uvs.Add(new Vector2(0, 0));
+            uvs.Add(new Vector2(1, 0));
+            uvs.Add(new Vector2(1, 1));
+            uvs.Add(new Vector2(0, 1));
+        }
+
+        float s = 0.5f;
+
+        if (!px) AddFace(new Vector3(s, -s, -s), new Vector3(s, -s, s), new Vector3(s, s, s), new Vector3(s, s, -s));
+        if (!nx) AddFace(new Vector3(-s, -s, s), new Vector3(-s, -s, -s), new Vector3(-s, s, -s), new Vector3(-s, s, s));
+
+        if (!py) AddFace(new Vector3(-s, s, -s), new Vector3(s, s, -s), new Vector3(s, s, s), new Vector3(-s, s, s));
+        if (!ny) AddFace(new Vector3(-s, -s, s), new Vector3(s, -s, s), new Vector3(s, -s, -s), new Vector3(-s, -s, -s));
+
+        if (!pz) AddFace(new Vector3(s, -s, s), new Vector3(-s, -s, s), new Vector3(-s, s, s), new Vector3(s, s, s));
+        if (!nz) AddFace(new Vector3(-s, -s, -s), new Vector3(s, -s, -s), new Vector3(s, s, -s), new Vector3(-s, s, -s));
+
+        mesh.SetVertices(verts);
+        mesh.SetTriangles(tris, 0);
+        mesh.SetUVs(0, uvs);
+        mesh.RecalculateNormals();
+
+        mf.mesh = mesh;
+
         cube.AddComponent<BlockInfo>().block = block;
 
         if (!optimized)
@@ -272,6 +327,7 @@ public class CubePlacer : MonoBehaviour
                 explosion.enemyDamageMultiplier = 2;
                 explosion.maxSize = 25;
                 explosion.speed = 3;
+                blockOptimizer.DestroyBlock(pos);
             });
         }
         else
@@ -279,11 +335,11 @@ public class CubePlacer : MonoBehaviour
             breakable.destroyEvent.onActivate.AddListener(() =>
             {
                 CreateParticle(pos, block);
-                blockOptimizer.isDirty = true;
+                blockOptimizer.DestroyBlock(pos);
             });
         }
 
-        blockOptimizer.AddBlock(cube.transform);
+        return cube;
     }
 
     public void CreatePickup(Vector3 pos, Block block)

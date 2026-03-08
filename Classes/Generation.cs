@@ -46,7 +46,7 @@ public class Generation : MonoBehaviour
                 int worldX = chunkX * chunkSize + x;
                 int worldZ = chunkZ * chunkSize + z;
                 int value = GetValue(worldX, worldZ, seed);
-                while (value > -5)
+                while (value > 0)
                 {
                     CubePlacer.instance.PlaceCube((new Vector3(
                         worldX * blockSize,

@@ -1,11 +1,29 @@
 ﻿namespace CraftKill.Classes;
 
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class BlockOptimizer : MonoBehaviour
 {
-    public List<Transform> blocks = [];
+    public class blockToSpawn
+    {
+        public Vector3 pos;
+        public Block block;
+        public Transform forceParent;
+        public bool optimized;
+        public GameObject spawned;
+
+        public blockToSpawn(Vector3 pos, Block block, Transform forceParent, bool optimized)
+        {
+            this.pos = pos;
+            this.block = block;
+            this.forceParent = forceParent;
+            this.optimized = optimized;
+        }
+    }
+
+    public List<blockToSpawn> blocks = [];
 
     public bool isDirty = false;
 
@@ -14,16 +32,17 @@ public class BlockOptimizer : MonoBehaviour
         if (isDirty) FindCulledBlocks();
     }
 
-    public void AddBlock(Transform block)
+    public void AddBlock(Vector3 pos, Block block, Transform forceParent, bool optimized)
     {
-        blocks.Add(block);
+        blocks.Add(new blockToSpawn(pos, block, forceParent, optimized));
         isDirty = true;
     }
 
-    public void CleanList()
+    public void DestroyBlock(Vector3 pos)
     {
-        for (int i = blocks.Count - 1; i >= 0; i--)
-            if (!blocks[i]) blocks.RemoveAt(i);
+        foreach (var block in blocks.ToList())
+            if (Vector3.Distance(block.pos, pos) < 1) blocks.Remove(block);
+        isDirty = true;
     }
 
     public void FindCulledBlocks()
@@ -41,34 +60,29 @@ public class BlockOptimizer : MonoBehaviour
 
         HashSet<Vector3> blockPositions = new HashSet<Vector3>(blocks.Count);
 
-        for (int i = blocks.Count - 1; i >= 0; i--)
-        {
-            var t = blocks[i];
-            if (!t)
-            {
-                blocks.RemoveAt(i);
-                continue;
-            }
-
-            blockPositions.Add(t.position);
-        }
+        foreach (var t in blocks) blockPositions.Add(t.pos);
 
         foreach (var t in blocks)
         {
-            Vector3 p = t.position;
+            Vector3 p = t.pos;
 
-            bool covered =
-                blockPositions.Contains(p + px) &&
-                blockPositions.Contains(p + nx) &&
-                blockPositions.Contains(p + py) &&
-                blockPositions.Contains(p + ny) &&
-                blockPositions.Contains(p + pz) &&
-                blockPositions.Contains(p + nz);
+            var px1 = blockPositions.Contains(p + px);
+            var px2 = blockPositions.Contains(p + nx);
+            var px3 = blockPositions.Contains(p + py);
+            var px4 = blockPositions.Contains(p + ny);
+            var px5 = blockPositions.Contains(p + pz);
+            var px6 = blockPositions.Contains(p + nz);
 
-            bool shouldBeActive = !covered;
+            bool covered = px1 && px2 && px3 && px4 && px5 && px6;
 
-            if (t.gameObject.activeSelf != shouldBeActive)
-                t.gameObject.SetActive(shouldBeActive);
+            if (!covered && !t.spawned)
+            {
+                CubePlacer.instance.SpawnCube(t.pos, t.block, t.forceParent, t.optimized, px1, px2, px3, px4, px5, px6);
+            }
+            else if (covered && t.spawned)
+            {
+                Destroy(t.spawned);
+            }
         }
     }
 }
