@@ -90,7 +90,7 @@ public class CubePlacer : MonoBehaviour
 
     void SetupDefaultBlocks()
     {
-        NewBlock("Default", GetSandboxMaterial("Procedural Cube").mainTexture, BlockType.block, 5);
+        NewBlock("Default", GetSandboxMaterial("Procedural Cube").mainTexture, BlockType.block, 3);
         NewBlock("BlowMe", BundleLoader.bundle.LoadAsset<Texture>("blowme"), BlockType.tnt, 1);
         NewBlock("cat", BundleLoader.bundle.LoadAsset<Texture>("cat"), BlockType.block, 0);
         NewBlock("cat2", BundleLoader.bundle.LoadAsset<Texture>("cat2"), BlockType.block, 0);
@@ -98,10 +98,11 @@ public class CubePlacer : MonoBehaviour
         NewBlock("StrongRock", BundleLoader.bundle.LoadAsset<Texture>("BackgroundTile"), BlockType.bedrock, 0);
         NewBlock("Lava", Plugin.Ass<Material>("Assets/Materials/Liquids/Lava.mat").mainTexture, BlockType.lava, 0);
         NewBlock("Grass", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 1/Grass.mat").mainTexture, BlockType.bedrock, 0);
-        NewBlock("CaveRock", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 5/CaveRock1.mat").mainTexture, BlockType.block, 5);
-        NewBlock("BoneWall", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 6/BoneWall.mat").mainTexture, BlockType.block, 2);
+        NewBlock("CaveRock", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 5/CaveRock1.mat").mainTexture, BlockType.block, 20);
+        NewBlock("BoneWall", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 6/BoneWall.mat").mainTexture, BlockType.block, 4);
         NewBlock("FleshStrong", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 3/Flesh1.mat").mainTexture, BlockType.bedrock, 0, Plugin.Ass<Material>("Assets/Materials/Environment/Layer 3/Flesh1.mat"));
         NewBlock("MincedStrong", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 3/Minced 1.mat").mainTexture, BlockType.bedrock, 0, Plugin.Ass<Material>("Assets/Materials/Environment/Layer 3/Minced 1.mat"));
+        NewBlock("Glass", GetSandboxMaterial("Procedural Glass Variant").mainTexture, BlockType.block, 5, GetSandboxMaterial("Procedural Glass Variant"));
     }
 
     void ReloadInventory()
