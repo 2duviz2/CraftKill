@@ -24,35 +24,35 @@ public class Generation : MonoBehaviour
         [
             new Biome("Plains", 7, 100,
             [
-                "Assets/Prefabs/Enemies/Rewrite/Zombie/Filth.prefab",
-                "Assets/Prefabs/Enemies/Rewrite/Zombie/Soldier.prefab",
-                "Assets/Prefabs/Enemies/Rewrite/Zombie/Stray.prefab",
-                "Assets/Prefabs/Enemies/Schism.prefab",
-                "Assets/Prefabs/Enemies/Rewrite/Statue/Cerberus.prefab",
-                "Assets/Prefabs/Enemies/Rewrite/Machine/Swordsmachine.prefab",
-                "Assets/Prefabs/Enemies/Malicious Face.prefab",
-                "Assets/Prefabs/Enemies/Mass.prefab",
-                "Assets/Prefabs/Enemies/Drone.prefab",
+                Spawnable.Filth,
+                Spawnable.Soldier,
+                Spawnable.Stray,
+                Spawnable.Schism,
+                Spawnable.Cerberi,
+                Spawnable.SwordsMachine,
+                Spawnable.Maurice,
+                Spawnable.Mass,
+                Spawnable.Drone
             ]), 
             new Biome("Hell", 10, 50,
             [
-                "Assets/Prefabs/Enemies/Rewrite/Statue/Cerberus.prefab",
-                "Assets/Prefabs/Enemies/Rewrite/Machine/Swordsmachine.prefab",
-                "Assets/Prefabs/Enemies/Idol.prefab",
-                "Assets/Prefabs/Enemies/Mannequin.prefab",
-                "Assets/Prefabs/Enemies/Guttertank.prefab",
-                "Assets/Prefabs/Enemies/Gutterman.prefab",
-                "Assets/Prefabs/Enemies/Providence.prefab",
-                "Assets/Prefabs/Enemies/Virtue.prefab",
-                "Assets/Prefabs/Enemies/Streetcleaner.prefab",
+                Spawnable.Cerberi,
+                Spawnable.SwordsMachine,
+                Spawnable.Idol,
+                Spawnable.Mannequin,
+                Spawnable.GutterTank,
+                Spawnable.GutterMan,
+                Spawnable.Providence,
+                Spawnable.Virtue,
+                Spawnable.StreetCleaner
             ]),
             new Biome("Deep Hell", 11, 20,
             [
-                "Assets/Prefabs/Enemies/MirrorReaperCyberGrind.prefab",
-                "Assets/Prefabs/Enemies/Idol.prefab",
-                "Assets/Prefabs/Enemies/Providence.prefab",
-                "Assets/Prefabs/Enemies/PowerWithSpawnEffect.prefab",
-                "Assets/Prefabs/Enemies/Sisyphus.prefab",
+                Spawnable.MirrorReaper,
+                Spawnable.Idol,
+                Spawnable.Providence,
+                Spawnable.Power,
+                Spawnable.Insurrectionist
             ])
         ], 10)
     ];
@@ -61,10 +61,10 @@ public class Generation : MonoBehaviour
 
     public int seed = 0;
 
-    public class Biome(string name, int block, int height, List<string> enemies)
+    public class Biome(string name, int block, int height, List<Helpers.EnemiesHelper.Spawnable> enemies)
     {
         public string name = name;
-        public List<string> enemies = enemies;
+        public List<string> enemies = [.. enemies.Select(e => EnemyToAddressableKey[e])];
         public int block = block;
         public int height = height;
     }
