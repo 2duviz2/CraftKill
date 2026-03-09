@@ -97,8 +97,8 @@ public class CubePlacer : MonoBehaviour
         NewBlock("Grass", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 1/Grass.mat").mainTexture, BlockType.bedrock, 0);
         NewBlock("CaveRock", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 5/CaveRock1.mat").mainTexture, BlockType.block, 5);
         NewBlock("BoneWall", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 6/BoneWall.mat").mainTexture, BlockType.block, 2);
-        NewBlock("FleshStrong", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 3/Flesh1.mat").mainTexture, BlockType.bedrock, 0);
-        NewBlock("MincedStrong", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 3/Minced 1.mat").mainTexture, BlockType.bedrock, 0);
+        NewBlock("FleshStrong", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 3/Flesh1.mat").mainTexture, BlockType.bedrock, 0, Plugin.Ass<Material>("Assets/Materials/Environment/Layer 3/Flesh1.mat"));
+        NewBlock("MincedStrong", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 3/Minced 1.mat").mainTexture, BlockType.bedrock, 0, Plugin.Ass<Material>("Assets/Materials/Environment/Layer 3/Minced 1.mat"));
     }
 
     void ReloadInventory()
@@ -126,9 +126,9 @@ public class CubePlacer : MonoBehaviour
         }
     }
 
-    void NewBlock(string blockID, Texture texture, BlockType type, int chance)
+    void NewBlock(string blockID, Texture texture, BlockType type, int chance, Material mat = null)
     {
-        var block = new Block(blockID, texture, type, chance);
+        var block = new Block(blockID, texture, type, chance, mat ? mat : null);
         blocks.Add(block);
     }
 
@@ -376,6 +376,7 @@ public class CubePlacer : MonoBehaviour
 
     public Material GetMaterial(Block block)
     {
+        if (block.mat) return block.mat;
         Material newMat = Instantiate(defaultMaterial);
         newMat.mainTexture = block.texture;
         return newMat;
