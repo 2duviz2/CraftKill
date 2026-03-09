@@ -17,6 +17,11 @@ public class BlockInfoPickup : MonoBehaviour
     public void Start()
     {
         rb = GetComponent<Rigidbody>();
+
+        rb.constraints = RigidbodyConstraints.FreezeRotation;
+        rb.velocity = Vector3.up * 8f;
+        rb.velocity += Vector3.right * Random.Range(-5f, 5f);
+        rb.velocity += Vector3.forward * Random.Range(-5f, 5f);
     }
 
     public void Update()

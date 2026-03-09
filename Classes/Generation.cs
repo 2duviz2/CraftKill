@@ -14,7 +14,7 @@ public class Generation : MonoBehaviour
     public static int loadDistance = 4;
 
     public static int minMobHeight = 3;
-    public static float mobChance = 0.04f / 256f;
+    public static float mobChance;
     public static float crateChance = 0.05f / 256f;
 
     public Dictionary<Vector2Int, GameObject> chunks = [];
@@ -211,10 +211,17 @@ public class Generation : MonoBehaviour
     {
         Plugin.LogInfo("Generating...");
         this.seed = seed;
-        mobChance = 0.04f / 256f;
-        mobChance *= PrefsManager.Instance.GetInt("difficulty");
+
+        SetDefaultChances();
+
         GenerateChunk(0, 0, seed);
         NewCrate(new Vector3(-5, 3, 5), null, 8, 9);
+    }
+
+    public static void SetDefaultChances()
+    {
+        mobChance = 0.04f / 256f;
+        mobChance *= PrefsManager.Instance.GetInt("difficulty");
     }
 }
 
@@ -227,6 +234,6 @@ public class EnemyDeathRewardPatch
         if (SceneHelper.CurrentScene != Minefart.MinefartSceneName) return;
         int rank = EnemyTracker.Instance.GetEnemyRank(__instance);
         if (rank <= 0) return;
-        Generation.SpawnThingies(__instance.transform.position, rank * 2, rank * 3);
+        Generation.SpawnThingies(__instance.transform.position + Vector3.up * 5, rank * 2, rank * 3);
     }
 }

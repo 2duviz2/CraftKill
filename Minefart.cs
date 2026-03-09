@@ -43,7 +43,6 @@ public static class Minefart
     /// <summary> Loads the Empty level asynchronously. </summary>
     public static IEnumerator LoadLevelAsync()
     {
-        Plugin.LogInfo("Loading Empty Scene.");
         SceneHelper.Instance.loadingBlocker.SetActive(true);
         SceneHelper.SetLoadingSubtext("Loading world...");
         yield return null;
@@ -84,10 +83,10 @@ public static class SceneHelperPatch
 {
     /// <summary> Reload the empty scene when you restart mission in it. </summary>
     [HarmonyPrefix]
-    [HarmonyPatch(typeof(SceneHelper), nameof(SceneHelper.RestartSceneAsync))]
-    public static bool RestartMissionPatch(ref Coroutine __result)
+    [HarmonyPatch(typeof(SceneHelper), nameof(SceneHelper.LoadSceneAsync))]
+    public static bool LoadSceneAsyncPatch(ref Coroutine __result, string sceneName)
     {
-        if (SceneHelper.CurrentScene.StartsWith(Minefart.MinefartSceneName))
+        if (sceneName == Minefart.MinefartSceneName)
         {
             __result = Plugin.instance.StartCoroutine(Minefart.LoadLevelAsync());
             return false;
