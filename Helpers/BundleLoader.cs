@@ -1,4 +1,4 @@
-﻿namespace Mod.Helpers;
+﻿namespace CraftKill.Helpers;
 
 using UnityEngine;
 using System.IO;

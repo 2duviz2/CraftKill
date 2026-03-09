@@ -1,4 +1,4 @@
-﻿namespace Mod.Helpers.Attributes;
+﻿namespace CraftKill.Helpers.Attributes;
 
 using System;
 using System.Collections.Generic;

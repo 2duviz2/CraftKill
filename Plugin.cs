@@ -1,4 +1,4 @@
-﻿namespace Mod;
+﻿namespace CraftKill;
 
 using BepInEx;
 using BepInEx.Configuration;
