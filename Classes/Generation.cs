@@ -21,9 +21,9 @@ public class Generation : MonoBehaviour
     public Dictionary<Vector2Int, GameObject> chunks = [];
 
     public static List<Dimension> dimensions = [
-        new Dimension(
-            [
-            new Biome(7, 100,
+        new Dimension("Overworld",
+        [
+            new Biome("Plains", 7, 100,
             [
                 "Assets/Prefabs/Enemies/Rewrite/Zombie/Filth.prefab",
                 "Assets/Prefabs/Enemies/Rewrite/Zombie/Soldier.prefab",
@@ -35,7 +35,7 @@ public class Generation : MonoBehaviour
                 "Assets/Prefabs/Enemies/Mass.prefab",
                 "Assets/Prefabs/Enemies/Drone.prefab",
             ]), 
-            new Biome(10, 50,
+            new Biome("Hell", 10, 50,
             [
                 "Assets/Prefabs/Enemies/Rewrite/Statue/Cerberus.prefab",
                 "Assets/Prefabs/Enemies/Rewrite/Machine/Swordsmachine.prefab",
@@ -47,7 +47,7 @@ public class Generation : MonoBehaviour
                 "Assets/Prefabs/Enemies/Virtue.prefab",
                 "Assets/Prefabs/Enemies/Streetcleaner.prefab",
             ]),
-            new Biome(11, 20,
+            new Biome("Deep Hell", 11, 20,
             [
                 "Assets/Prefabs/Enemies/MirrorReaperCyberGrind.prefab",
                 "Assets/Prefabs/Enemies/Idol.prefab",
@@ -55,37 +55,26 @@ public class Generation : MonoBehaviour
                 "Assets/Prefabs/Enemies/PowerWithSpawnEffect.prefab",
                 "Assets/Prefabs/Enemies/Sisyphus.prefab",
             ])
-            ],10)
+        ], 10)
     ];
 
     public static int currentDimension = 0;
 
     public int seed = 0;
 
-    public class Biome
+    public class Biome(string name, int block, int height, List<string> enemies)
     {
-        public List<string> enemies = [];
-        public int block;
-        public int height;
-
-        public Biome(int block, int height, List<string> enemies)
-        {
-            this.block = block;
-            this.height = height;
-            this.enemies = enemies;
-        }
+        public string name = name;
+        public List<string> enemies = enemies;
+        public int block = block;
+        public int height = height;
     }
 
-    public class Dimension
+    public class Dimension(string name, List<Biome> biomes, int maxHeight)
     {
-        public List<Biome> biomes = [];
-        public int maxHeight = 10;
-
-        public Dimension(List<Biome> biomes, int maxHeight)
-        {
-            this.biomes = biomes;
-            this.maxHeight = maxHeight;
-        }
+        public string name = name;
+        public List<Biome> biomes = biomes;
+        public int maxHeight = maxHeight;
     }
 
     public static int GetValue(int x, int z, int seed, int maxH, float scale = 0.04f)
