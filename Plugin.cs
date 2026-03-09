@@ -64,7 +64,7 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    public static T Ass<T>(string path) => Addressables.LoadAssetAsync<T>(path).WaitForCompletion();
+    public static T Ass<T>(string path) => AssHelper.Ass<T>(path);
     public static void LogInfo(object msg) => instance.Logger.LogInfo(msg);
     public static void LogWarning(object msg) => instance.Logger.LogWarning(msg);
     public static void LogError(object msg) => instance.Logger.LogError(msg);

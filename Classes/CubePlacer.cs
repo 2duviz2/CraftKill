@@ -97,6 +97,8 @@ public class CubePlacer : MonoBehaviour
         NewBlock("Grass", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 1/Grass.mat").mainTexture, BlockType.bedrock, 0);
         NewBlock("CaveRock", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 5/CaveRock1.mat").mainTexture, BlockType.block, 5);
         NewBlock("BoneWall", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 6/BoneWall.mat").mainTexture, BlockType.block, 2);
+        NewBlock("FleshStrong", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 3/Flesh1.mat").mainTexture, BlockType.bedrock, 0);
+        NewBlock("MincedStrong", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 3/Minced 1.mat").mainTexture, BlockType.bedrock, 0);
     }
 
     void ReloadInventory()
@@ -333,6 +335,7 @@ public class CubePlacer : MonoBehaviour
             breakable.destroyEvent.onActivate.AddListener(() =>
             {
                 CreateParticle(pos, block);
+                CreatePickup(pos, block);
             });
         }
     }

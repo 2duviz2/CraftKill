@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static CraftKill.Classes.Generation;
 
 public class Generation : MonoBehaviour
 {
@@ -19,18 +20,82 @@ public class Generation : MonoBehaviour
 
     public Dictionary<Vector2Int, GameObject> chunks = [];
 
+    public static List<Dimension> dimensions = [
+        new Dimension(
+            [
+            new Biome(7, 100,
+            [
+                "Assets/Prefabs/Enemies/Rewrite/Zombie/Filth.prefab",
+                "Assets/Prefabs/Enemies/Rewrite/Zombie/Soldier.prefab",
+                "Assets/Prefabs/Enemies/Rewrite/Zombie/Stray.prefab",
+                "Assets/Prefabs/Enemies/Schism.prefab",
+                "Assets/Prefabs/Enemies/Rewrite/Statue/Cerberus.prefab",
+                "Assets/Prefabs/Enemies/Rewrite/Machine/Swordsmachine.prefab",
+                "Assets/Prefabs/Enemies/Malicious Face.prefab",
+                "Assets/Prefabs/Enemies/Mass.prefab",
+                "Assets/Prefabs/Enemies/Drone.prefab",
+            ]), 
+            new Biome(10, 50,
+            [
+                "Assets/Prefabs/Enemies/Rewrite/Statue/Cerberus.prefab",
+                "Assets/Prefabs/Enemies/Rewrite/Machine/Swordsmachine.prefab",
+                "Assets/Prefabs/Enemies/Idol.prefab",
+                "Assets/Prefabs/Enemies/Mannequin.prefab",
+                "Assets/Prefabs/Enemies/Guttertank.prefab",
+                "Assets/Prefabs/Enemies/Gutterman.prefab",
+                "Assets/Prefabs/Enemies/Providence.prefab",
+                "Assets/Prefabs/Enemies/Virtue.prefab",
+                "Assets/Prefabs/Enemies/Streetcleaner.prefab",
+            ]),
+            new Biome(11, 20,
+            [
+                "Assets/Prefabs/Enemies/MirrorReaperCyberGrind.prefab",
+                "Assets/Prefabs/Enemies/Idol.prefab",
+                "Assets/Prefabs/Enemies/Providence.prefab",
+                "Assets/Prefabs/Enemies/PowerWithSpawnEffect.prefab",
+                "Assets/Prefabs/Enemies/Sisyphus.prefab",
+            ])
+            ],10)
+    ];
+
+    public static int currentDimension = 0;
+
     public int seed = 0;
 
-    public static int GetValue(int x, int z, int seed)
+    public class Biome
     {
-        float scale = 0.04f;
+        public List<string> enemies = [];
+        public int block;
+        public int height;
 
+        public Biome(int block, int height, List<string> enemies)
+        {
+            this.block = block;
+            this.height = height;
+            this.enemies = enemies;
+        }
+    }
+
+    public class Dimension
+    {
+        public List<Biome> biomes = [];
+        public int maxHeight = 10;
+
+        public Dimension(List<Biome> biomes, int maxHeight)
+        {
+            this.biomes = biomes;
+            this.maxHeight = maxHeight;
+        }
+    }
+
+    public static int GetValue(int x, int z, int seed, int maxH, float scale = 0.04f)
+    {
         float nx = (x + seed) * scale;
         float nz = (z + seed) * scale;
         float noise = Mathf.PerlinNoise(nx, nz);
-        int value = Mathf.FloorToInt(noise * maxHeight) + 1;
+        int value = Mathf.FloorToInt(noise * maxH) + 1;
 
-        return Mathf.Clamp(value, 1, maxHeight);
+        return Mathf.Clamp(value, 1, maxH);
     }
 
     public void GenerateChunk(int chunkX, int chunkZ, int seed)
@@ -52,12 +117,14 @@ public class Generation : MonoBehaviour
             {
                 int worldX = chunkX * chunkSize + x;
                 int worldZ = chunkZ * chunkSize + z;
-                int value = GetValue(worldX, worldZ, seed);
+                int value = GetValue(worldX, worldZ, seed, dimensions[currentDimension].maxHeight);
 
                 var cubePos = GetPos(new Vector3(worldX, value, worldZ), blockSize);
+                var biome = GetBiome(worldX, worldZ, seed);
 
-                NewCube(cubePos, 7, c);
-                CheckForNewMob(worldX, value, worldZ, c.transform);
+                int cube = GetFloorCube(biome);
+                NewCube(cubePos, cube, c);
+                CheckForNewMob(worldX, value, worldZ, c.transform, biome);
                 CheckForNewCrate(worldX, value, worldZ, c.transform);
 
                 if (value == 1)
@@ -71,12 +138,42 @@ public class Generation : MonoBehaviour
         }
     }
 
-    public static void CheckForNewMob(int worldX, int value, int worldZ, Transform c)
+    public int GetFloorCube(Biome biome)
+    {
+        return biome.block;
+    }
+
+    public static Biome GetBiome(int x, int z, int seed)
+    {
+        int value = GetValue(x, z, seed + 1, 100, 0.005f);
+
+        Biome bb = null;
+        int height = 1000;
+
+        foreach (Biome b in dimensions[currentDimension].biomes)
+        {
+            if (value <= b.height && height > b.height)
+            {
+                bb = b;
+                height = b.height;
+            }
+        }
+
+        return bb;
+    }
+
+    public static void CheckForNewMob(int worldX, int value, int worldZ, Transform c, Biome biome)
     {
         if (Random.value <= mobChance)
         {
-            NewMob(GetPos(new Vector3(worldX, value + 1, worldZ), CubePlacer.instance.blockSize), c);
+            NewMob(GetPos(new Vector3(worldX, value + 1, worldZ), CubePlacer.instance.blockSize), c, GetEnemy(biome));
         }
+    }
+
+    public static string GetEnemy(Biome biome)
+    {
+        var e = biome.enemies;
+        return e[Random.Range(0, e.Count)];
     }
 
     public static void CheckForNewCrate(int worldX, int value, int worldZ, Transform c)
@@ -87,33 +184,11 @@ public class Generation : MonoBehaviour
         }
     }
 
-    public static List<string> enemies = [
-        "Assets/Prefabs/Enemies/Rewrite/Zombie/Filth.prefab",
-        "Assets/Prefabs/Enemies/Rewrite/Zombie/Soldier.prefab",
-        "Assets/Prefabs/Enemies/Rewrite/Zombie/Stray.prefab",
-        "Assets/Prefabs/Enemies/Schism.prefab",
-        "Assets/Prefabs/Enemies/Rewrite/Statue/Cerberus.prefab",
-        "Assets/Prefabs/Enemies/Rewrite/Machine/Swordsmachine.prefab",
-        //"Assets/Prefabs/Enemies/Deathcatcher.prefab",
-        "Assets/Prefabs/Enemies/Idol.prefab",
-        "Assets/Prefabs/Enemies/Malicious Face.prefab",
-        "Assets/Prefabs/Enemies/Mass.prefab",
-        "Assets/Prefabs/Enemies/Mannequin.prefab",
-        "Assets/Prefabs/Enemies/Guttertank.prefab",
-        "Assets/Prefabs/Enemies/Gutterman.prefab",
-        "Assets/Prefabs/Enemies/Providence.prefab",
-        "Assets/Prefabs/Enemies/PowerWithSpawnEffect.prefab",
-        "Assets/Prefabs/Enemies/Drone.prefab",
-        "Assets/Prefabs/Enemies/Virtue.prefab",
-        "Assets/Prefabs/Enemies/Streetcleaner.prefab",
-        "Assets/Prefabs/Enemies/Schism.prefab",
-        ];
-
-    public static void NewMob(Vector3 pos, Transform c)
+    public static void NewMob(Vector3 pos, Transform c, string enemy)
     {
         if (!NewMovement.Instance.activated) return;
 
-        GameObject Enemy = Instantiate(Plugin.Ass<GameObject>(enemies[Random.Range(0, enemies.Count)]), pos - Vector3.up * (CubePlacer.instance.blockSize / 2f), Quaternion.identity);
+        GameObject Enemy = Instantiate(Plugin.Ass<GameObject>(enemy), pos - Vector3.up * (CubePlacer.instance.blockSize / 2f), Quaternion.identity);
         if (Enemy.name.StartsWith("Providence")) Enemy.transform.Translate(0, 5, 0);
         Enemy.transform.SetParent(c);
     }
@@ -222,6 +297,7 @@ public class Generation : MonoBehaviour
     {
         mobChance = 0.04f / 256f;
         mobChance *= PrefsManager.Instance.GetInt("difficulty");
+        currentDimension = 0;
     }
 }
 

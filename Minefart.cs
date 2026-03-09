@@ -43,6 +43,7 @@ public static class Minefart
     /// <summary> Loads the Empty level asynchronously. </summary>
     public static IEnumerator LoadLevelAsync()
     {
+        SceneHelper.PendingScene = MinefartSceneName;
         SceneHelper.Instance.loadingBlocker.SetActive(true);
         SceneHelper.SetLoadingSubtext("Loading world...");
         yield return null;
@@ -65,6 +66,7 @@ public static class Minefart
         // wait til its loaded 
         while (!sceneload.isDone) yield return null;
 
+        SceneHelper.PendingScene = null;
         Plugin.LogInfo("Scene loaded!");
         SceneHelper.SetLoadingSubtext("");
         SceneHelper.Instance.loadingBlocker.SetActive(false);
@@ -89,6 +91,36 @@ public static class SceneHelperPatch
         if (sceneName == Minefart.MinefartSceneName)
         {
             __result = Plugin.instance.StartCoroutine(Minefart.LoadLevelAsync());
+            return false;
+        }
+
+        return true;
+    }
+}
+
+[HarmonyPatch]
+public static class GetMissionNamePatch
+{
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(GetMissionName), nameof(GetMissionName.GetMission))]
+    public static bool Patch1(ref string __result, int missionNum)
+    {
+        if (missionNum == -6767)
+        {
+            __result = "WORLD";
+            return false;
+        }
+
+        return true;
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(GetMissionName), nameof(GetMissionName.GetSceneName))]
+    public static bool Patch3(ref string __result, int missionNum)
+    {
+        if (missionNum == -6767)
+        {
+            __result = Minefart.MinefartSceneName;
             return false;
         }
 
