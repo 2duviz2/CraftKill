@@ -1,14 +1,12 @@
 ﻿namespace CraftKill;
 
 using HarmonyLib;
-using Mod;
 using System.Collections;
 using System.IO;
 using System.Reflection;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 /// <summary> Handles loading and accessing the empty scene. </summary>
 public static class Minefart

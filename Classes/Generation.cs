@@ -1,7 +1,7 @@
 ﻿namespace CraftKill.Classes;
 
 using HarmonyLib;
-using Mod;
+using CraftKill;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;

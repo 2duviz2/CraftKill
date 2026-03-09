@@ -1,17 +1,15 @@
 ﻿namespace CraftKill.Classes;
 
 using HarmonyLib;
-using Mod;
-using Mod.Helpers;
+using CraftKill;
+using CraftKill.Helpers;
 using System.Collections.Generic;
-using System.Linq;
 using TMPro;
 using ULTRAKILL.Portal;
 using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
-using UnityEngine.UIElements;
 
 public class CubePlacer : MonoBehaviour
 {

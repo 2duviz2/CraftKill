@@ -2,13 +2,11 @@
 
 using BepInEx;
 using BepInEx.Configuration;
-using CraftKill;
 using HarmonyLib;
-using Mod.Helpers;
-using Mod.Helpers.Attributes;
+using CraftKill.Helpers;
+using CraftKill.Helpers.Attributes;
 using TMPro;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
