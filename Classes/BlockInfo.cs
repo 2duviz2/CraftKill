@@ -32,7 +32,10 @@ public class BlockInfoPickup : MonoBehaviour
         if (livingTime > 120)
         {
             Destroy(gameObject);
+            return;
         }
+
+        if (transform.position.y < -100) Destroy(gameObject);
     }
 
     public void OnTriggerEnter(Collider other)

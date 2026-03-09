@@ -29,8 +29,10 @@ public class CubePlacer : MonoBehaviour
     public Transform ItemsContainer;
 
     public Material defaultMaterial;
+    public Mesh defaultMesh;
     
     public Dictionary<string, GameObject> assets = [];
+    public Dictionary<Block, Material> materials = [];
 
     LayerMask layerMask = LayerMask.GetMask("Outdoors", "OutdoorsBaked", "Environment", "EnvironmentBaked");
 
@@ -55,7 +57,10 @@ public class CubePlacer : MonoBehaviour
         ghostCube.SetActive(false);
         placedCube = BundleLoader.bundle.LoadAsset<GameObject>("Block");
 
-        defaultMaterial = GetSandboxMaterial("Procedural Cube");
+        defaultMaterial = Plugin.Ass<Material>("Assets/Materials/uk_construct/ConstructWallRed.mat");
+        GameObject defaultCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        defaultMesh = defaultCube.GetComponent<MeshFilter>().sharedMesh;
+        Destroy(defaultCube);
 
         SetupAssets();
         SetupItemsCanvas();
@@ -85,7 +90,7 @@ public class CubePlacer : MonoBehaviour
 
     void SetupDefaultBlocks()
     {
-        NewBlock("Default", defaultMaterial.mainTexture, BlockType.block, 5);
+        NewBlock("Default", GetSandboxMaterial("Procedural Cube").mainTexture, BlockType.block, 5);
         NewBlock("BlowMe", BundleLoader.bundle.LoadAsset<Texture>("blowme"), BlockType.tnt, 1);
         NewBlock("cat", BundleLoader.bundle.LoadAsset<Texture>("cat"), BlockType.block, 0);
         NewBlock("cat2", BundleLoader.bundle.LoadAsset<Texture>("cat2"), BlockType.block, 0);
@@ -251,6 +256,8 @@ public class CubePlacer : MonoBehaviour
     {
         GameObject cube = Instantiate(placedCube, pos, Quaternion.identity);
 
+        //cube.GetComponent<MeshFilter>().mesh = defaultMesh;
+
         if (forceParent)
             cube.transform.SetParent(forceParent);
 
@@ -374,9 +381,13 @@ public class CubePlacer : MonoBehaviour
 
     public Material GetMaterial(Block block)
     {
+        if (materials.ContainsKey(block))
+            return materials[block];
+
         if (block.mat) return block.mat;
         Material newMat = Instantiate(defaultMaterial);
         newMat.mainTexture = block.texture;
+        materials[block] = newMat;
         return newMat;
     }
 
