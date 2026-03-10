@@ -12,6 +12,7 @@ public static class EnemiesHelper
     {
         // husks rawr
         [Spawnable.Filth] = "Assets/Prefabs/Enemies/Rewrite/Zombie/Filth.prefab",
+        [Spawnable.Stalker] = "Assets/Prefabs/Enemies/Stalker.prefab",
         [Spawnable.Stray] = "Assets/Prefabs/Enemies/Rewrite/Zombie/Stray.prefab",
         [Spawnable.Schism] = "Assets/Prefabs/Enemies/Schism.prefab",
         [Spawnable.Soldier] = "Assets/Prefabs/Enemies/Rewrite/Zombie/Soldier.prefab",
@@ -36,7 +37,7 @@ public static class EnemiesHelper
         // angels (angles!!! :O)
         [Spawnable.Providence] = "Assets/Prefabs/Enemies/Providence.prefab",
         [Spawnable.Virtue] = "Assets/Prefabs/Enemies/Virtue.prefab",
-        [Spawnable.Power] = "Assets/Prefabs/Enemies/PowerWithSpawnEffect.prefab",
+        [Spawnable.Power] = "Assets/Prefabs/Enemies/Power.prefab",
 
         // prime souls meow
         [Spawnable.MinosPrime] = "Assets/Prefabs/Enemies/MinosPrime.prefab",
@@ -48,6 +49,7 @@ public static class EnemiesHelper
     {
         // husks
         Filth,
+        Stalker,
         Stray,
         Schism,
         Soldier,

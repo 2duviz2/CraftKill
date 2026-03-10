@@ -23,6 +23,7 @@ public static class Minefart
         Plugin.Ass<GameObject>("FirstRoom");
         Plugin.Ass<GameObject>("FirstRoom Pit");
         Plugin.Ass<GameObject>("Wrapped Shop");
+        Plugin.Ass<GameObject>("Assets/Prefabs/Levels/Hakita.prefab");
 
         // load asset bundle :3 meow rawr
         Stream bundleStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("scene.bundle");

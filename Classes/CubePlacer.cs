@@ -103,6 +103,7 @@ public class CubePlacer : MonoBehaviour
         NewBlock("FleshStrong", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 3/Flesh1.mat").mainTexture, BlockType.bedrock, 0, Plugin.Ass<Material>("Assets/Materials/Environment/Layer 3/Flesh1.mat"));
         NewBlock("MincedStrong", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 3/Minced 1.mat").mainTexture, BlockType.bedrock, 0, Plugin.Ass<Material>("Assets/Materials/Environment/Layer 3/Minced 1.mat"));
         NewBlock("Glass", GetSandboxMaterial("Procedural Glass Variant").mainTexture, BlockType.block, 5, GetSandboxMaterial("Procedural Glass Variant"));
+        NewBlock("SandStrong", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 4/SandLarge.mat").mainTexture, BlockType.bedrock, 0, Plugin.Ass<Material>("Assets/Materials/Environment/Layer 4/SandLarge.mat"));
     }
 
     void ReloadInventory()

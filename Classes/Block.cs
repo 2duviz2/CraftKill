@@ -8,6 +8,7 @@ public enum BlockType
     tnt,
     bedrock,
     lava,
+    healthBonus,
 }
 
 public class Block : ScriptableObject

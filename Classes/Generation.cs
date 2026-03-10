@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using CraftKill.Helpers;
 
 public class Generation : MonoBehaviour
 {
@@ -22,7 +23,16 @@ public class Generation : MonoBehaviour
     public static List<Dimension> dimensions = [
         new Dimension("Overworld",
         [
-            new Biome("Plains", 7, 100,
+            new Biome("Desert", 13, 100, 10,
+            [
+                Spawnable.Stalker,
+                Spawnable.Insurrectionist,
+                Spawnable.Virtue,
+                Spawnable.Schism,
+                Spawnable.Cerberi,
+                Spawnable.Maurice,
+            ]), 
+            new Biome("Plains", 7, 70, 5,
             [
                 Spawnable.Filth,
                 Spawnable.Soldier,
@@ -34,7 +44,7 @@ public class Generation : MonoBehaviour
                 Spawnable.Mass,
                 Spawnable.Drone
             ]), 
-            new Biome("Hell", 10, 50,
+            new Biome("Hell", 10, 50, 20,
             [
                 Spawnable.Cerberi,
                 Spawnable.SwordsMachine,
@@ -46,7 +56,7 @@ public class Generation : MonoBehaviour
                 Spawnable.Virtue,
                 Spawnable.StreetCleaner
             ]),
-            new Biome("Deep Hell", 11, 20,
+            new Biome("Deep Hell", 11, 20, 50,
             [
                 Spawnable.MirrorReaper,
                 Spawnable.Idol,
@@ -54,26 +64,28 @@ public class Generation : MonoBehaviour
                 Spawnable.Power,
                 Spawnable.Insurrectionist
             ])
-        ], 10)
+        ], 10, "Sky_Overworld")
     ];
 
     public static int currentDimension = 0;
 
     public int seed = 0;
 
-    public class Biome(string name, int block, int height, List<Helpers.EnemiesHelper.Spawnable> enemies)
+    public class Biome(string name, int block, int height, int minItems, List<Helpers.EnemiesHelper.Spawnable> enemies)
     {
         public string name = name;
         public List<string> enemies = [.. enemies.Select(e => EnemyToAddressableKey[e])];
         public int block = block;
         public int height = height;
+        public int minItems = minItems;
     }
 
-    public class Dimension(string name, List<Biome> biomes, int maxHeight)
+    public class Dimension(string name, List<Biome> biomes, int maxHeight, string skybox)
     {
         public string name = name;
         public List<Biome> biomes = biomes;
         public int maxHeight = maxHeight;
+        public string skybox = skybox;
     }
 
     public static int GetValue(int x, int z, int seed, int maxH, float scale = 0.04f)
@@ -113,7 +125,7 @@ public class Generation : MonoBehaviour
                 int cube = GetFloorCube(biome);
                 NewCube(cubePos, cube, c);
                 CheckForNewMob(worldX, value, worldZ, c.transform, biome);
-                CheckForNewCrate(worldX, value, worldZ, c.transform);
+                CheckForNewCrate(worldX, value, worldZ, c.transform, biome);
 
                 if (value == 1)
                 {
@@ -164,11 +176,13 @@ public class Generation : MonoBehaviour
         return e[Random.Range(0, e.Count)];
     }
 
-    public static void CheckForNewCrate(int worldX, int value, int worldZ, Transform c)
+    public static void CheckForNewCrate(int worldX, int value, int worldZ, Transform c, Biome biome)
     {
         if (Random.value <= crateChance)
         {
-            NewCrate(GetPos(new Vector3(worldX, value + 1, worldZ), CubePlacer.instance.blockSize), c);
+            if (biome.minItems <= 0) return;
+
+            NewCrate(GetPos(new Vector3(worldX, value + 1, worldZ), CubePlacer.instance.blockSize), c, biome.minItems, (int)(biome.minItems * 1.2f));
         }
     }
 
@@ -286,6 +300,28 @@ public class Generation : MonoBehaviour
         mobChance = 0.04f / 256f;
         mobChance *= PrefsManager.Instance.GetInt("difficulty");
         currentDimension = 0;
+        UpdateSkybox();
+    }
+
+    public void ClearChunks()
+    {
+        foreach (var chunk in chunks.ToList())
+        {
+            Destroy(chunk.Value);
+            chunks.Remove(chunk.Key);
+        }
+    }
+
+    public void ChangeDimension(int dimension)
+    {
+        ClearChunks();
+        currentDimension = dimension;
+        UpdateSkybox();
+    }
+
+    public static void UpdateSkybox()
+    {
+        RenderSettings.skybox = BundleLoader.bundle.LoadAsset<Material>(dimensions[currentDimension].skybox);
     }
 }
 
@@ -296,6 +332,7 @@ public class EnemyDeathRewardPatch
     public static void Prefix(EnemyIdentifier __instance)
     {
         if (SceneHelper.CurrentScene != Minefart.MinefartSceneName) return;
+
         int rank = EnemyTracker.Instance.GetEnemyRank(__instance);
         if (rank <= 0) return;
         Generation.SpawnThingies(__instance.transform.position + Vector3.up * 5, rank * 2, rank * 3);
