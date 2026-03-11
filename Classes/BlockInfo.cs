@@ -55,7 +55,7 @@ public class BlockInfoPickup : MonoBehaviour
 
     public float clamp(float v)
     {
-        return Mathf.Clamp(v, -50, 50);
+        return Mathf.Clamp(v, -20, 20);
     }
 }
 

@@ -9,6 +9,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using GameConsole;
+using CraftKill.Classes;
 
 [BepInPlugin(PluginInfo.GUID, PluginInfo.Name, PluginInfo.Version)]
 public class Plugin : BaseUnityPlugin
@@ -60,6 +62,8 @@ public class Plugin : BaseUnityPlugin
                 obj.AddComponent(type);
             }
         }
+
+        Console.Instance.RegisterCommand(new BlockCommand());
     }
 
     public static T Ass<T>(string path) => AssHelper.Ass<T>(path);

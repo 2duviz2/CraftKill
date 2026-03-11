@@ -48,7 +48,7 @@ public class CubePlacer : MonoBehaviour
 
     public NavMeshSurface surface;
 
-    public void Start()
+    public void Awake()
     {
         instance = this;
         cam = GetComponent<CameraController>().cam;
@@ -436,5 +436,9 @@ public class CubePlacer : MonoBehaviour
 public class CameraPatch
 {
     [HarmonyPatch(typeof(CameraController), nameof(CameraController.Start))]
-    public static void Prefix(CameraController __instance) => __instance.gameObject.AddComponent<CubePlacer>();
+    public static void Prefix(CameraController __instance)
+    {
+        if (SceneHelper.CurrentScene == Minefart.MinefartSceneName)
+            __instance.gameObject.AddComponent<CubePlacer>();
+    }
 }
