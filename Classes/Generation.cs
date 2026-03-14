@@ -10,6 +10,8 @@ using CraftKill.Helpers;
 
 public class Generation : MonoBehaviour
 {
+    public static Generation instance;
+
     public static int maxHeight = 10;
     public static int chunkSize = 16;
     public static int loadDistance = 4;
@@ -23,7 +25,7 @@ public class Generation : MonoBehaviour
     public static List<Dimension> dimensions = [
         new Dimension("Overworld",
         [
-            new Biome("Desert", 13, 100, 10,
+            new Biome("Desert", 13, 100, 10, -1,
             [
                 Spawnable.Stalker,
                 Spawnable.Insurrectionist,
@@ -32,7 +34,7 @@ public class Generation : MonoBehaviour
                 Spawnable.Cerberi,
                 Spawnable.Maurice,
             ]), 
-            new Biome("Plains", 7, 70, 5,
+            new Biome("Plains", 7, 70, 5, 6,
             [
                 Spawnable.Filth,
                 Spawnable.Soldier,
@@ -44,19 +46,18 @@ public class Generation : MonoBehaviour
                 Spawnable.Mass,
                 Spawnable.Drone
             ]), 
-            new Biome("Hell", 10, 50, 20,
+            new Biome("Hell", 10, 50, 20, 6,
             [
                 Spawnable.Cerberi,
                 Spawnable.SwordsMachine,
-                Spawnable.Idol,
                 Spawnable.Mannequin,
                 Spawnable.GutterTank,
                 Spawnable.GutterMan,
                 Spawnable.Providence,
-                Spawnable.Virtue,
-                Spawnable.StreetCleaner
+                Spawnable.StreetCleaner,
+                Spawnable.Mindflayer
             ]),
-            new Biome("Deep Hell", 11, 20, 50,
+            new Biome("Deep Hell", 11, 25, 50, 6,
             [
                 Spawnable.MirrorReaper,
                 Spawnable.Idol,
@@ -64,28 +65,38 @@ public class Generation : MonoBehaviour
                 Spawnable.Power,
                 Spawnable.Insurrectionist
             ])
-        ], 10, "Sky_Overworld")
+        ], 10, "Sky_Overworld"),
+
+        new Dimension("Lust",
+        [
+            new Biome("Plains", 15, 100, 5, -1,
+            [
+                Spawnable.Drone,
+            ]),
+        ], 3, "LustSkybox1", 0.2f),
     ];
 
     public static int currentDimension = 0;
 
     public int seed = 0;
 
-    public class Biome(string name, int block, int height, int minItems, List<Helpers.EnemiesHelper.Spawnable> enemies)
+    public class Biome(string name, int block, int height, int minItems, int liquidBlock, List<Spawnable> enemies)
     {
         public string name = name;
         public List<string> enemies = [.. enemies.Select(e => EnemyToAddressableKey[e])];
         public int block = block;
         public int height = height;
         public int minItems = minItems;
+        public int liquidBlock = liquidBlock;
     }
 
-    public class Dimension(string name, List<Biome> biomes, int maxHeight, string skybox)
+    public class Dimension(string name, List<Biome> biomes, int maxHeight, string skybox, float perlinScale = 0.04f)
     {
         public string name = name;
         public List<Biome> biomes = biomes;
         public int maxHeight = maxHeight;
         public string skybox = skybox;
+        public float perlinScale = perlinScale;
     }
 
     public static int GetValue(int x, int z, int seed, int maxH, float scale = 0.04f)
@@ -109,7 +120,7 @@ public class Generation : MonoBehaviour
         c.AddComponent<GoreZone>();
         chunks[new Vector2Int(chunkX, chunkZ)] = c;
 
-        float blockSize = CubePlacer.instance.blockSize;
+        float blockSize = CubePlacer.blockSize;
 
         for (int x = 0; x < chunkSize; x++)
         {
@@ -117,20 +128,20 @@ public class Generation : MonoBehaviour
             {
                 int worldX = chunkX * chunkSize + x;
                 int worldZ = chunkZ * chunkSize + z;
-                int value = GetValue(worldX, worldZ, seed, dimensions[currentDimension].maxHeight);
+                int value = GetValue(worldX, worldZ, seed, dimensions[currentDimension].maxHeight, dimensions[currentDimension].perlinScale);
 
-                var cubePos = GetPos(new Vector3(worldX, value, worldZ), blockSize);
                 var biome = GetBiome(worldX, worldZ, seed);
+                var cubePos = GetPos(new Vector3(worldX, value, worldZ), blockSize);
 
                 int cube = GetFloorCube(biome);
                 NewCube(cubePos, cube, c);
                 CheckForNewMob(worldX, value, worldZ, c.transform, biome);
                 CheckForNewCrate(worldX, value, worldZ, c.transform, biome);
 
-                if (value == 1)
+                if (value == 1 && biome.liquidBlock > -1)
                 {
                     cubePos = GetPos(new Vector3(worldX, value + 1, worldZ), blockSize);
-                    NewCube(cubePos, 6, c);
+                    NewCube(cubePos, biome.liquidBlock, c);
                 }
             }
 
@@ -166,7 +177,7 @@ public class Generation : MonoBehaviour
     {
         if (Random.value <= mobChance)
         {
-            NewMob(GetPos(new Vector3(worldX, value + 1, worldZ), CubePlacer.instance.blockSize), c, GetEnemy(biome));
+            NewMob(GetPos(new Vector3(worldX, value + 1, worldZ), CubePlacer.blockSize), c, GetEnemy(biome));
         }
     }
 
@@ -182,7 +193,7 @@ public class Generation : MonoBehaviour
         {
             if (biome.minItems <= 0) return;
 
-            NewCrate(GetPos(new Vector3(worldX, value + 1, worldZ), CubePlacer.instance.blockSize), c, biome.minItems, (int)(biome.minItems * 1.2f));
+            NewCrate(GetPos(new Vector3(worldX, value + 1, worldZ), CubePlacer.blockSize), c, biome.minItems, (int)(biome.minItems * 1.2f));
         }
     }
 
@@ -190,7 +201,7 @@ public class Generation : MonoBehaviour
     {
         if (!NewMovement.Instance.activated) return;
 
-        GameObject Enemy = Instantiate(Plugin.Ass<GameObject>(enemy), pos - Vector3.up * (CubePlacer.instance.blockSize / 2f), Quaternion.identity);
+        GameObject Enemy = Instantiate(Plugin.Ass<GameObject>(enemy), pos - Vector3.up * (CubePlacer.blockSize / 2f), Quaternion.identity);
         if (Enemy.name.StartsWith("Providence")) Enemy.transform.Translate(0, 5, 0);
         Enemy.transform.SetParent(c);
     }
@@ -208,10 +219,10 @@ public class Generation : MonoBehaviour
     public static void NewCrate(Vector3 pos, Transform c, int min = 30, int max = 50)
     {
         GameObject crate = Instantiate(Plugin.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Crate.prefab"), pos, Quaternion.identity);
-        crate.transform.localScale = Vector3.one * (CubePlacer.instance.blockSize / 2f);
-        crate.transform.position -= Vector3.right * (CubePlacer.instance.blockSize / 2f);
-        crate.transform.position += Vector3.forward * (CubePlacer.instance.blockSize / 2f);
-        crate.transform.position += Vector3.down * (CubePlacer.instance.blockSize / 2f);
+        crate.transform.localScale = Vector3.one * (CubePlacer.blockSize / 2f);
+        crate.transform.position -= Vector3.right * (CubePlacer.blockSize / 2f);
+        crate.transform.position += Vector3.forward * (CubePlacer.blockSize / 2f);
+        crate.transform.position += Vector3.down * (CubePlacer.blockSize / 2f);
         crate.GetComponent<Breakable>().destroyEvent.onActivate.AddListener(() =>
         {
             SpawnThingies(pos, min, max);
@@ -236,7 +247,7 @@ public class Generation : MonoBehaviour
         {
             if (blocks.Count == 0) break;
 
-            CubePlacer.instance.CreatePickup(pos + new Vector3(Random.value - 0.5f, Random.value - 0.5f, Random.value - 0.5f) * (CubePlacer.instance.blockSize / 2f), blocks[Random.Range(0, blocks.Count)]);
+            CubePlacer.instance.CreatePickup(pos + new Vector3(Random.value - 0.5f, Random.value - 0.5f, Random.value - 0.5f) * (CubePlacer.blockSize / 2f), blocks[Random.Range(0, blocks.Count)]);
         }
     }
 
@@ -248,6 +259,11 @@ public class Generation : MonoBehaviour
             pos.z * blockSize) + Vector3.one * blockSize / 2f;
     }
 
+    public void Awake()
+    {
+        instance = this;
+    }
+
     public void Start()
     {
         Generate(Random.Range(0, 100000));
@@ -255,7 +271,7 @@ public class Generation : MonoBehaviour
 
     public void Update()
     {
-        var divider = chunkSize * CubePlacer.instance.blockSize;
+        var divider = chunkSize * CubePlacer.blockSize;
         var plr = new Vector2(NewMovement.Instance.transform.position.x, NewMovement.Instance.transform.position.z);
         Vector2 plrPos = new Vector2(Mathf.Round(plr.x / divider), Mathf.Round(plr.y / divider));
 
@@ -297,7 +313,7 @@ public class Generation : MonoBehaviour
 
     public static void SetDefaultChances()
     {
-        mobChance = 0.04f / 256f;
+        mobChance = 0.08f / 256f;
         mobChance *= PrefsManager.Instance.GetInt("difficulty");
         currentDimension = 0;
         UpdateSkybox();
@@ -314,6 +330,11 @@ public class Generation : MonoBehaviour
 
     public void ChangeDimension(int dimension)
     {
+        if (NewMovement.Instance.activated)
+            NewMovement.Instance.transform.position = Vector3.zero;
+
+        LevelNamePopup.Instance.CustomNameAppear("CRAFTKILL", dimensions[dimension].name.ToUpper());
+
         ClearChunks();
         currentDimension = dimension;
         UpdateSkybox();
@@ -335,6 +356,7 @@ public class EnemyDeathRewardPatch
 
         int rank = EnemyTracker.Instance.GetEnemyRank(__instance);
         if (rank <= 0) return;
+        rank += 1;
         Generation.SpawnThingies(__instance.transform.position + Vector3.up * 5, rank * 2, rank * 3);
     }
 }

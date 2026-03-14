@@ -4,7 +4,6 @@ using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
 using CraftKill.Helpers;
-using CraftKill.Helpers.Attributes;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -53,17 +52,10 @@ public class Plugin : BaseUnityPlugin
     {
         BundleLoader.LoadBundle("assets.bundle");
 
-        foreach (var (type, attr) in AttributeHelper.GetTypesWithAttribute<CreateOnStart>())
-        {
-            if (typeof(MonoBehaviour).IsAssignableFrom(type))
-            {
-                GameObject obj = new GameObject(type.Name);
-                DontDestroyOnLoad(obj);
-                obj.AddComponent(type);
-            }
-        }
-
         Console.Instance.RegisterCommand(new BlockCommand());
+        Console.Instance.RegisterCommand(new FillCommand());
+        Console.Instance.RegisterCommand(new SoftBlocks());
+        Console.Instance.RegisterCommand(new ChangeDimension());
     }
 
     public static T Ass<T>(string path) => AssHelper.Ass<T>(path);
@@ -76,5 +68,5 @@ public class PluginInfo
 {
     public const string GUID = "duviz.craftkill";
     public const string Name = "CraftKill";
-    public const string Version = "1.0.0";
+    public const string Version = "0.1.1";
 }

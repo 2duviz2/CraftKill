@@ -30,13 +30,15 @@ public class CubePlacer : MonoBehaviour
 
     public Material defaultMaterial;
     public Mesh defaultMesh;
+
+    public AudioSource source;
     
     public Dictionary<string, GameObject> assets = [];
     public Dictionary<Block, Material> materials = [];
 
     LayerMask layerMask = LayerMask.GetMask("Outdoors", "OutdoorsBaked", "Environment", "EnvironmentBaked");
 
-    public float blockSize = 5;
+    public static float blockSize = 5;
     public float reach = 25f;
     public bool inventoryDirty = true;
 
@@ -56,6 +58,7 @@ public class CubePlacer : MonoBehaviour
         ghostCube.transform.localScale = Vector3.one * blockSize;
         ghostCube.SetActive(false);
         placedCube = BundleLoader.bundle.LoadAsset<GameObject>("Block");
+        source = gameObject.AddComponent<AudioSource>();
 
         defaultMaterial = Plugin.Ass<Material>("Assets/Materials/uk_construct/ConstructWallRed.mat");
         GameObject defaultCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -71,7 +74,8 @@ public class CubePlacer : MonoBehaviour
             gameObject.AddComponent<Generation>();
             surface = FindObjectOfType<NavMeshSurface>();
             surface.layerMask = LayerMask.GetMask("Outdoors");
-            surface.size = Vector3.one * Generation.chunkSize * blockSize * 2;
+            surface.size = new Vector3(1,0.75f,1) * Generation.chunkSize * blockSize * 2;
+            surface.voxelSize = 0.5f;
         }
     }
 
@@ -104,6 +108,9 @@ public class CubePlacer : MonoBehaviour
         NewBlock("MincedStrong", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 3/Minced 1.mat").mainTexture, BlockType.bedrock, 0, Plugin.Ass<Material>("Assets/Materials/Environment/Layer 3/Minced 1.mat"));
         NewBlock("Glass", GetSandboxMaterial("Procedural Glass Variant").mainTexture, BlockType.block, 5, GetSandboxMaterial("Procedural Glass Variant"));
         NewBlock("SandStrong", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 4/SandLarge.mat").mainTexture, BlockType.bedrock, 0, Plugin.Ass<Material>("Assets/Materials/Environment/Layer 4/SandLarge.mat"));
+        NewBlock("Acid", BundleLoader.bundle.LoadAsset<Texture>("acid"), BlockType.lava, 0);
+        NewBlock("LustStrong", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 2/Standalone4.mat").mainTexture, BlockType.bedrock, 0);
+        NewBlock("Wood", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 1/Barrel Wood.mat").mainTexture, BlockType.block, 10);
     }
 
     void ReloadInventory()
@@ -173,6 +180,8 @@ public class CubePlacer : MonoBehaviour
         {
             inventory.Add((block, amount));
         }
+
+        PlayPickupSFX();
     }
 
     public void Update()
@@ -250,11 +259,23 @@ public class CubePlacer : MonoBehaviour
 
     public void PlaceCubeByPlayer(Vector3 pos)
     {
-        PlaceCube(pos, inventory[selectedBlock].Item1);
+        var c = PlaceCube(pos, inventory[selectedBlock].Item1);
+
+        var s = c.AddComponent<AudioSource>();
+        s.pitch = Random.Range(0.9f, 1.1f);
+        s.spatialize = true;
+        s.maxDistance = 50;
+        s.minDistance = 5;
+        s.playOnAwake = false;
+        s.spatialBlend = 1;
+        s.rolloffMode = AudioRolloffMode.Linear;
+        s.clip = Plugin.Ass<AudioClip>("Assets/Sounds/Gore/GORE - WEAP - Disembowel_Gore_5 Short.wav");
+        s.Play();
+
         ClearBlock(inventory[selectedBlock].Item1, 1);
     }
 
-    public void PlaceCube(Vector3 pos, Block block, Transform forceParent = null, bool optimized = false)
+    public GameObject PlaceCube(Vector3 pos, Block block, Transform forceParent = null, bool optimized = false)
     {
         GameObject cube = Instantiate(placedCube, pos, Quaternion.identity);
 
@@ -328,7 +349,7 @@ public class CubePlacer : MonoBehaviour
             hz.affected = AffectedSubjects.All;
             hz.ignoreDashingPlayer = false;
             hz.ignoreInvincibility = false;
-            hz.bounceForce = 25f;
+            hz.bounceForce = 500f;
             hz.hurtCooldown = 1f;
             hz.setDamage = 50f;
             hz.hardDamagePercentage = 0.35f;
@@ -345,6 +366,8 @@ public class CubePlacer : MonoBehaviour
                 CreatePickup(pos, block);
             });
         }
+
+        return cube;
     }
 
     public void CreatePickup(Vector3 pos, Block block)
@@ -356,6 +379,19 @@ public class CubePlacer : MonoBehaviour
 
         pickup.GetComponent<Renderer>().material = GetMaterial(block);
         pickup.AddComponent<BlockInfoPickup>().block = block;
+    }
+
+    public void PlayPickupSFX()
+    {
+        source.pitch = Random.Range(0.7f, 0.9f);
+        source.spatialize = true;
+        source.maxDistance = 50;
+        source.minDistance = 5;
+        source.playOnAwake = false;
+        source.spatialBlend = 1;
+        source.rolloffMode = AudioRolloffMode.Linear;
+        source.clip = Plugin.Ass<AudioClip>("Assets/Sounds/UI/Click1b.wav");
+        source.Play();
     }
 
     public void CreateParticle(Vector3 pos, Block block)
@@ -371,6 +407,17 @@ public class CubePlacer : MonoBehaviour
         particle.GetComponent<ParticleSystemRenderer>().material = GetMaterial(block);
 
         particle.AddComponent<CubeParticle>();
+
+        var s = particle.AddComponent<AudioSource>();
+        s.pitch = Random.Range(0.9f, 1.1f);
+        s.spatialize = true;
+        s.maxDistance = 50;
+        s.minDistance = 5;
+        s.playOnAwake = false;
+        s.spatialBlend = 1;
+        s.rolloffMode = AudioRolloffMode.Linear;
+        s.clip = Plugin.Ass<AudioClip>("Assets/Sounds/Environment/boulder_impact_on_stones_14 fast.wav");
+        s.Play();
     }
 
     public bool TryRaycastPos(out Vector3 pos, out Transform hitTransform)
@@ -393,12 +440,12 @@ public class CubePlacer : MonoBehaviour
         return newMat;
     }
 
-    public Vector3 V3ToGrid(Vector3 grid)
+    public static Vector3 V3ToGrid(Vector3 grid)
     {
         return new Vector3(GridPos(grid.x), GridPos(grid.y), GridPos(grid.z));
     }
 
-    public float GridPos(float num)
+    public static float GridPos(float num)
     {
         return Mathf.Round((num - blockSize / 2f) / blockSize) * blockSize + blockSize / 2f ;
     }
