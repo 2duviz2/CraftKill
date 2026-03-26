@@ -69,9 +69,13 @@ public class Generation : MonoBehaviour
 
         new Dimension("Lust",
         [
-            new Biome("Plains", 15, 100, 5, -1,
+            new Biome("Structure", 15, 100, 5, -1,
             [
                 Spawnable.Drone,
+            ]),
+            new Biome("IHateYou", 17, 20, 5, -1,
+            [
+                Spawnable.MajorVirtueNonBoss,
             ]),
         ], 3, "LustSkybox1", 0.2f),
     ];

@@ -26,6 +26,8 @@ public class Plugin : BaseUnityPlugin
 
         new Harmony(PluginInfo.GUID).PatchAll();
 
+        ContentBundle.LoadRawBundle();
+
         SceneManager.sceneLoaded += (_, __) => OnSceneLoad();
     }
 

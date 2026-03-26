@@ -111,6 +111,7 @@ public class CubePlacer : MonoBehaviour
         NewBlock("Acid", BundleLoader.bundle.LoadAsset<Texture>("acid"), BlockType.lava, 0);
         NewBlock("LustStrong", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 2/Standalone4.mat").mainTexture, BlockType.bedrock, 0);
         NewBlock("Wood", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 1/Barrel Wood.mat").mainTexture, BlockType.block, 10);
+        NewBlock("Lust2Strong", Plugin.Ass<Material>("Assets/Materials/Environment/Layer 2/Standalone5.mat").mainTexture, BlockType.bedrock, 0);
     }
 
     void ReloadInventory()

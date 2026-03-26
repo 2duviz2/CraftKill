@@ -42,6 +42,10 @@ public static class EnemiesHelper
         // prime souls meow
         [Spawnable.MinosPrime] = "Assets/Prefabs/Enemies/MinosPrime.prefab",
         [Spawnable.SisyphusPrime] = "Assets/Prefabs/Enemies/SisyphusPrime.prefab",
+
+        // custom enemies
+        [Spawnable.MajorVirtue] = "Assets/Mods/Shit/VirtueAss.prefab",
+        [Spawnable.MajorVirtueNonBoss] = "Assets/Mods/Shit/VirtueAssNonBoss.prefab",
     };
 
     /// <summary> Enum of every enemy type to be used later by the mod. </summary>
@@ -78,6 +82,10 @@ public static class EnemiesHelper
 
         // prime souls
         MinosPrime,
-        SisyphusPrime
+        SisyphusPrime,
+
+        // custom enemies
+        MajorVirtue,
+        MajorVirtueNonBoss,
     }
 }
